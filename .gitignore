@@ -87,3 +87,9 @@ ENV/
 
 # Rope project settings
 .ropeproject
+
+# OS files
+.DS_Store
+
+# Tmp files
+*.tmp
