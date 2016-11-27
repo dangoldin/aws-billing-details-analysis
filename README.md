@@ -9,7 +9,7 @@ Analyze the AWS detailed billing report
 
 ## Generated charts
 
-Note that these hide the axis labels to preserve privacy.
+Note that these hide the axis labels to preserve privacy. Also note that I plan on cleaning the code up a bit more to improve the grouping of the "UsageType" values to deal with the long tail.
 
 ### By layer
 ![By layer](https://raw.githubusercontent.com/dangoldin/aws-billing-details-analysis/master/static/img/by_layer.png)
