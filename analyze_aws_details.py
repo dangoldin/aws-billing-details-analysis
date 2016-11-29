@@ -25,6 +25,23 @@ def add_layer(d):
         d.layer[ d['user:opsworks:layer:' + layer].notnull() ] = layer
     return d
 
+def add_usage_type_group(d):
+    # Get rid of the nan
+    all_usage_types = list(x for x in d['UsageType'].unique() if type(x) == str)
+    d['usage_type_group'] = ''
+    for usage_type in all_usage_types:
+        if 'DataTransfer' in usage_type:
+            d.usage_type_group[ d['UsageType'] == usage_type ] = 'DataTransfer'
+        elif 'Requests' in usage_type:
+            d.usage_type_group[ d['UsageType'] == usage_type ] = 'Requests'
+        elif 'In-Bytes' in usage_type:
+            d.usage_type_group[ d['UsageType'] == usage_type ] = 'In-Bytes'
+        elif 'Out-Bytes' in usage_type:
+            d.usage_type_group[ d['UsageType'] == usage_type ] = 'Out-Bytes'
+        elif 'BoxUsage' in usage_type:
+            d.usage_type_group[ d['UsageType'] == usage_type ] = 'BoxUsage'
+    return d
+
 def plot(d):
     dpi = 200
 
@@ -50,6 +67,11 @@ def plot(d):
     plt.savefig('by_usage_type_top_25.png', figsize=(2000/dpi, 2000/dpi), dpi=dpi)
 
     plt.figure()
+    d.groupby('usage_type_group')['Cost'].sum().sort_values(ascending=0).plot(kind='bar', sort_columns=True)
+    plt.tight_layout()
+    plt.savefig('by_usage_type_group.png', figsize=(2000/dpi, 2000/dpi), dpi=dpi)
+
+    plt.figure()
     d.groupby('user:Name')['Cost'].sum().sort_values(ascending=0).plot(kind='bar', sort_columns=True)
     plt.tight_layout()
     plt.savefig('by_user_name.png', figsize=(2000/dpi, 2000/dpi), dpi=dpi)
@@ -65,6 +87,11 @@ def plot(d):
     plt.savefig('by_layer_usage_type_top_50.png', figsize=(2000/dpi, 2000/dpi), dpi=dpi)
 
     plt.figure()
+    d.groupby(['layer', 'usage_type_group'])['Cost'].sum().sort_values(ascending=0).plot(kind='bar', sort_columns=True)
+    plt.tight_layout()
+    plt.savefig('by_layer_usage_type_group.png', figsize=(2000/dpi, 2000/dpi), dpi=dpi)
+
+    plt.figure()
     top_usage_types = list(d.groupby('UsageType')['Cost'].sum().sort_values(ascending=0)[:20].keys())
     d_filtered = d[d['UsageType'].isin(top_usage_types)]
     by_layer_usage = d_filtered.groupby(['layer', 'UsageType'])['Cost'].agg({'Cost': np.sum}).reset_index().sort_values('Cost', ascending=0)[:500]
@@ -73,9 +100,17 @@ def plot(d):
     plt.tight_layout()
     plt.savefig('by_layer_usage_type_top_heatmap.png', figsize=(2000/dpi, 2000/dpi), dpi=dpi)
 
+    plt.figure()
+    by_layer_usage_type_group = d_filtered.groupby(['layer', 'usage_type_group'])['Cost'].agg({'Cost': np.sum}).reset_index().sort_values('Cost', ascending=0)[:500]
+    by_layer_usage_type_group_pivoted = by_layer_usage_type_group.pivot(index='layer', columns='usage_type_group', values='Cost')
+    sns.heatmap(by_layer_usage_type_group_pivoted)
+    plt.tight_layout()
+    plt.savefig('by_layer_usage_type_group_heatmap.png', figsize=(2000/dpi, 2000/dpi), dpi=dpi)
+
 if __name__ == '__main__':
     fp = sys.argv[1]
 
     d = load_file(fp)
     d = add_layer(d)
+    d = add_usage_type_group(d)
     plot(d)
