@@ -29,17 +29,15 @@ def add_usage_type_group(d):
     # Get rid of the nan
     all_usage_types = list(x for x in d['UsageType'].unique() if type(x) == str)
     d['usage_type_group'] = ''
+
+    # Simple group assignment using substring
+    usage_groups = ['DataTransfer', 'Requests', 'In-Bytes', 'Out-Bytes', 'BoxUsage']
     for usage_type in all_usage_types:
-        if 'DataTransfer' in usage_type:
-            d.usage_type_group[ d['UsageType'] == usage_type ] = 'DataTransfer'
-        elif 'Requests' in usage_type:
-            d.usage_type_group[ d['UsageType'] == usage_type ] = 'Requests'
-        elif 'In-Bytes' in usage_type:
-            d.usage_type_group[ d['UsageType'] == usage_type ] = 'In-Bytes'
-        elif 'Out-Bytes' in usage_type:
-            d.usage_type_group[ d['UsageType'] == usage_type ] = 'Out-Bytes'
-        elif 'BoxUsage' in usage_type:
-            d.usage_type_group[ d['UsageType'] == usage_type ] = 'BoxUsage'
+        for usage_group in usage_groups:
+            if usage_group in usage_type:
+                d.usage_type_group[ d['UsageType'] == usage_type ] = usage_group
+            continue
+
     return d
 
 def plot(d):
