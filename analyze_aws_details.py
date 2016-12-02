@@ -40,6 +40,18 @@ def add_usage_type_group(d):
 
     return d
 
+def add_instance_type(d):
+    # Extract from usage type which will be like "APS1-BoxUsage:c4.large"
+    all_usage_types = list(x for x in d['UsageType'].unique() if type(x) == str)
+    d['instance_type'] = ''
+
+    for usage_type in all_usage_types:
+        if 'BoxUsage' in usage_type:
+            instance_type = usage_type.split(':')[-1]
+            d.instance_type[ d['UsageType'] == usage_type ] = instance_type
+
+    return d
+
 def plot(d):
     dpi = 200
 
@@ -53,6 +65,11 @@ def plot(d):
     d.groupby('ProductName')['Cost'].sum().sort_values(ascending=0).plot(kind='bar', sort_columns=True)
     plt.tight_layout()
     plt.savefig('by_product_name.png', figsize=(2000/dpi, 2000/dpi), dpi=dpi)
+
+    plt.figure()
+    d.groupby('instance_type')['Cost'].sum().sort_values(ascending=0).plot(kind='bar', sort_columns=True)
+    plt.tight_layout()
+    plt.savefig('by_instance_type.png', figsize=(2000/dpi, 2000/dpi), dpi=dpi)
 
     plt.figure()
     d.groupby('UsageType')['Cost'].sum().sort_values(ascending=0).plot(kind='bar', sort_columns=True)
@@ -111,4 +128,6 @@ if __name__ == '__main__':
     d = load_file(fp)
     d = add_layer(d)
     d = add_usage_type_group(d)
+    d = add_instance_type(d)
+
     plot(d)
